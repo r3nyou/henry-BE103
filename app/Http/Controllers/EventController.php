@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Repositories\EventNotifyChannelRepository;
+use App\Http\Repositories\EventRepository;
+use App\Http\Services\EventService;
 use App\Models\Event;
+use Exception;
 use Illuminate\Http\Request;
 use App\Models\EventNotifyChannel;
 use App\Http\Controllers\Controller;
@@ -36,20 +40,14 @@ class EventController extends Controller
         return response()->json($response); //Method of collection
     }
 
-    public function index()
+    public function index(EventService $eventService)
     {
-        // query builder
-        $events = Event::with('eventNotifyChannels')
-            ->select('events.id', 'events.name', 'trigger_time')
-            ->get()
-            ->paginate(2);
-        // $events = Event::all();
-        // dd($events);
+        $events = $eventService->getEvents();
         $response = [];
         foreach ($events as $event) {
             $notifyChannels = [];
             // SELECT * FROM event_notify_channel WHERE event_id = 1
-            foreach ($event->eventNotifyChannels as $eventNotifyChannel) { 
+            foreach ($event->eventNotifyChannels as $eventNotifyChannel) {
                 $notifyChannels[] = [
                     'id' => $eventNotifyChannel->id,
                     'messages' => json_decode($eventNotifyChannel->message_json, true),
@@ -75,19 +73,19 @@ class EventController extends Controller
                 'trigger_time' => $request->trigger_time,
                 'user_id' => $user->id,
             ]);
-    
+
             foreach ($request->notify_channel_ids as $notifyChannelId) {
                 EventNotifyChannel::create([
                     'event_id' => $event->id,
                     'notify_channel_id' => $notifyChannelId,
                     'message_json' => json_encode($request->messages),
                 ]);
-            }    
-            DB::commit();   
+            }
+            DB::commit();
             return response()->json(['status' => 'OK']);
-        } 
+        }
         catch (\Exception $e) {
-            report($e);           
+            report($e);
             DB::rollBack();
             return response()->json(['error' => 'Failed to create event'], 500);
         }
@@ -116,42 +114,19 @@ class EventController extends Controller
         return response()->json($response);
     }
 
-    public function update(string $id, PostEventRequest $request)
+    public function update(string $eventId, PostEventRequest $request)
     {
+        /** @var EventService $eventService */
+        $eventService = app(EventService::class);
+
         try {
-            DB::beginTransaction();   
-            
-            $event = Event::find($id);
-            if (!$event) {
-                DB::rollBack(); 
-                return response()->json(['message' => 'Event not found'], 404);
-            }
-            
-            $user = auth()->user();
-            if ($event->user_id !== $user->id) {
-                DB::rollBack();
-                return response()->json(['message' => 'Unauthorized'], 403);
-            }
-            
-            $data = $request->only(['name', 'trigger_time']);
-            $event->fill($data)->save();
-    
-            EventNotifyChannel::where('event_id', $event->id)->delete();
-    
-            foreach ($request->notify_channel_ids as $notifyChannelId) {
-                EventNotifyChannel::create([
-                    'event_id' => $event->id,
-                    'notify_channel_id' => $notifyChannelId,
-                    'message_json' => json_encode($request->messages),
-                ]);
-            }
-    
+            DB::beginTransaction();
+            $eventService->updateEvent($eventId, $request);
             DB::commit();
-    
+
             return response()->json(['status' => 'OK']);
-        } 
-        catch (\Exception $e) {
-            report($e);   
+        } catch (\Exception $e) {
+            report($e);
             DB::rollBack(); // Rollback in case of an exception
             return response()->json(['error' => 'Failed to update event'], 500);
         }
@@ -167,7 +142,7 @@ class EventController extends Controller
             if ($event->user_id !== $user->id) {
                 DB::rollBack();
                 return response()->json(['message' => 'Unauthorized'], 403);
-            }       
+            }
         // Must delete model with foreign key first
         EventNotifyChannel::where('event_id', $event->id)->delete();
         $event->delete();
