@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\EventDispatchController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -34,6 +35,11 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'events'], function() 
     Route::delete('{id}', [EventController::class, 'delete']);
 });
 Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logout']);
+
+
+Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'events/dispatch'], function() {
+    Route::post('/line', [EventDispatchController::class, 'lineNotify']);
+});
 
 // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //     return $request->user();
