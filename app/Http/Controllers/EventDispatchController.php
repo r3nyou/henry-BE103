@@ -10,9 +10,13 @@ use Illuminate\Http\Request;
 
 class EventDispatchController
 {
-    public function lineNotify()
+    public function lineNotify(int $eventId)
     {
-        $eventNotifyChannel = EventNotifyChannel::find(13);
+        $eventNotifyChannel = EventNotifyChannel::query()
+            ->where('event_id', $eventId)
+            ->where('notify_channel_id', EventNotifyChannel::LINE)
+            ->first();
+        // $eventNotifyChannel = EventNotifyChannel::find(13);
         $user = auth()->user();
 
         LineNotify::dispatchSync($eventNotifyChannel, $user);
@@ -20,9 +24,12 @@ class EventDispatchController
         return response()->json(['message' => 'Line Notify sent']);
     }
 
-    public function emailNotify(Request $request)
+    public function emailNotify(int $eventId)
     {
-        $eventNotifyChannel = EventNotifyChannel::find(4);
+        $eventNotifyChannel = EventNotifyChannel::query()
+            ->where('event_id', $eventId)
+            ->where('notify_channel_id', EventNotifyChannel::EMAIL)
+            ->first();
         $user = auth()->user();
 
         EmailNotify::dispatchSync($eventNotifyChannel, $user);

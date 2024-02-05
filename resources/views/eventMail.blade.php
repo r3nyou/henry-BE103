@@ -16,7 +16,7 @@
     </style>
     </head>
     <body class="antialiased">
-    <h1>Email Notify</h1>
     <p>Hi, {{ $user->name }}</p>
+    <p>{{ $msg }}</p>
     </body>
 </html>

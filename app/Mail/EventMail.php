@@ -16,12 +16,15 @@ class EventMail extends Mailable
 
     public $user;
 
+    public $msg;
+
     /**
      * Create a new message instance.
      */
-    public function __construct(User $user)
+    public function __construct(User $user, $msg)
     {
         $this->user = $user;
+        $this->msg = $msg;
     }
 
     /**

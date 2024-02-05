@@ -44,7 +44,11 @@ class EmailNotify implements ShouldQueue
      */
     public function handle(): void
     {
-        $eventMail = app(EventMail::class, ['user' => $this->user]);
+        $messages = json_decode($this->eventNotifyChannel->message_json, true);
+        $msg = $messages[$this->user->language->code];
+
+        $eventMail = app(EventMail::class, ['user' => $this->user, 'msg'=> $msg]);
+        // $eventMail = new EventMail($this->user, $msg);
         Mail::to($this->user->email)->send($eventMail);
     }
 }
