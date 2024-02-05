@@ -39,6 +39,7 @@ Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logou
 
 Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'events/dispatch'], function() {
     Route::post('/line', [EventDispatchController::class, 'lineNotify']);
+    Route::post('/email', [EventDispatchController::class, 'emailNotify']);
 });
 
 // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
