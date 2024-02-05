@@ -33,6 +33,8 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'events'], function() 
     Route::post('/', [EventController::class, 'store']);
     Route::put('{id}', [EventController::class, 'update']);
     Route::delete('{id}', [EventController::class, 'delete']);
+
+    Route::post('{id}/subscribe', [EventController::class, 'subscribe']);
 });
 Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logout']);
 
