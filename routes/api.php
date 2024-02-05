@@ -33,12 +33,15 @@ Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'events'], function() 
     Route::post('/', [EventController::class, 'store']);
     Route::put('{id}', [EventController::class, 'update']);
     Route::delete('{id}', [EventController::class, 'delete']);
+
+    Route::post('{id}/subscribe', [EventController::class, 'subscribe']);
 });
 Route::middleware('auth:sanctum')->post('logout', [AuthController::class, 'logout']);
 
 
 Route::group(['middleware' => 'auth:sanctum', 'prefix' => 'events/dispatch'], function() {
-    Route::post('/line', [EventDispatchController::class, 'lineNotify']);
+    Route::post('/line/{eventId}', [EventDispatchController::class, 'lineNotify']);
+    Route::post('/email/{eventId}', [EventDispatchController::class, 'emailNotify']);
 });
 
 // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {

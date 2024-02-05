@@ -6,6 +6,7 @@ use App\Http\Repositories\EventNotifyChannelRepository;
 use App\Http\Repositories\EventRepository;
 use App\Http\Services\EventService;
 use App\Models\Event;
+use App\Models\EventUser;
 use Exception;
 use Illuminate\Http\Request;
 use App\Models\EventNotifyChannel;
@@ -146,6 +147,23 @@ class EventController extends Controller
         // Must delete model with foreign key first
         EventNotifyChannel::where('event_id', $event->id)->delete();
         $event->delete();
+        return response()->json(['status' => 'OK']);
+    }
+
+    public function subscribe(string $id)
+    {
+        $event = Event::find($id);
+        if (!$event) {
+            return response()->json(['message' => 'Event not found'], 404);
+        }
+
+        $user = auth()->user();
+
+        EventUser::create([
+            'event_id' => $id,
+            'user_id' => $user->id,
+        ]);
+
         return response()->json(['status' => 'OK']);
     }
 }
